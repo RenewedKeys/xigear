@@ -80,7 +80,8 @@ local function read_items()
     local out = {}
     for _, bag in ipairs(BAGS) do
         local b = all[bag]
-        if b and b.enabled ~= false then
+        -- Mog House bags read as "not enabled" outside the Mog House, but their contents are still there
+        if b then
             for slot, item in pairs(b) do
                 if type(item) == 'table' and item.id and item.id > 0 then
                     local augs, rank = augments_and_rank(item)
