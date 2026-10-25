@@ -1,6 +1,6 @@
 # xigear
 
-A Windower 4 addon for [xi-gear.com](https://xi-gear.com), the FFXI gear planner. It saves a character's gear, storage slips, merits, job points and master levels to one file, which you import on xi-gear's Characters page. "Find best set" and the WS calculator then use what you actually have.
+A Windower 4 addon for [xi-gear.com](https://xi-gear.com), the FFXI gear planner. It saves a character's gear, storage slips, merits, job levels, job points and master levels to one file, which you import on xi-gear's Characters page. "Find best set" and the WS calculator then use what you actually have.
 
 **It never connects to the internet.** It only writes a file to your own computer. It's one short file, [`xigear/xigear.lua`](xigear/xigear.lua), so you can check that yourself.
 
@@ -12,7 +12,7 @@ Only this, for the character you're logged in as:
 - Every item in your inventory, wardrobes and Mog House bags (safe, storage, locker, satchel, sack, case), with each item's augments and rank
 - The items stored on your storage slips
 - Your merits
-- Job points spent on each job, and master levels
+- Each job's level, job points spent and master level
 
 ## Install
 

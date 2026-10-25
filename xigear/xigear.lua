@@ -30,8 +30,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 What the file holds: your character's name, server and race; every item in your inventory, wardrobes
-and Mog House bags with its augments and rank; the items on your storage slips; your merits; job points
-spent per job; master levels. The addon only writes this file. It has no network code and sends nothing.
+and Mog House bags with its augments and rank; the items on your storage slips; your merits; job levels,
+job points spent and master levels for each job. The addon only writes this file. It has no network code and sends nothing.
 ]]
 
 _addon.name = 'xigear'
@@ -126,10 +126,12 @@ local function read_character()
     local race = me and res.races[me.race] and res.races[me.race].en or ''
     local items = read_items()
     if not items then return nil end
-    local jp = {}
+    local jp, levels = {}, {}
     for _, job in ipairs(JOBS) do
         local j = player.job_points and player.job_points[job:lower()]
         if j then jp[job] = j.jp_spent or 0 end
+        local lv = player.jobs and player.jobs[job]
+        if lv and lv > 0 then levels[job] = lv end
     end
     local merits = {}
     for k, v in pairs(player.merits or {}) do
@@ -142,6 +144,7 @@ local function read_character()
         race = race:match('^(%a+)') or '',
         items = items,
         slips = read_slips(),
+        job_levels = levels,
         job_points = jp,
         master_levels = read_master_levels(),
         merits = merits,
