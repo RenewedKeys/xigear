@@ -197,17 +197,19 @@ local function save_file()
     if write(data_dir .. name, to_json(data)) then
         say(('Saved %s: %d items, %d on storage slips.'):format(name, #data.items, #data.slips))
         say('It\'s in Windower4/addons/xigear/data. Import it on xi-gear.com > Characters > Import.')
-        if not data.master_levels then say('Master levels weren\'t loaded yet: zone once and save again to include them.') end
+        if not data.master_levels then say('Master levels weren\'t loaded yet: zone once and export again to include them.') end
     else
         say("Couldn't write the file.", ERR)
     end
 end
 
 windower.register_event('addon command', function(cmd)
-    cmd = (cmd or 'save'):lower()
-    if cmd == 'save' then
+    cmd = (cmd or 'help'):lower()
+    if cmd == 'export' then
         save_file()
     else
-        say('//xigear - save this character to a file for xi-gear\'s Characters > Import')
+        say('Commands:')
+        say('  //xigear export - save this character to a file for xi-gear.com > Characters > Import')
+        say('  //xigear help - this list')
     end
 end)
