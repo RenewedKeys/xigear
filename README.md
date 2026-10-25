@@ -26,12 +26,19 @@ Add `lua load xigear` to `Windower4/scripts/init.txt` to load it every time.
 
 ## Use
 
-1. In game, type `//xigear`. It writes `xigear_<name>_<date>_<time>.json` to `Windower4/addons/xigear/data/`.
+1. In game, type `//xigear export`. It writes `xigear_<name>_<date>_<time>.json` to `Windower4/addons/xigear/data/`.
 2. On xi-gear.com, open **Characters**, click **Import** on that character, and pick the file.
 
 Do it again whenever your gear changes. Each character has its own file.
 
-**Master levels** come from information the game sends when you log in or zone. If you load the addon partway through a session and it says they weren't loaded, zone once and save again.
+**Master levels** come from information the game sends when you log in or zone. If you load the addon partway through a session and it says they weren't loaded, zone once and export again.
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `//xigear export` | Save this character to a file for xi-gear |
+| `//xigear help` | List the commands |
 
 ## Credits
 
