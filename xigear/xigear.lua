@@ -36,7 +36,7 @@ job points spent and master levels for each job. The addon only writes this file
 
 _addon.name = 'xigear'
 _addon.author = 'xi-gear'
-_addon.version = '1.1.1'
+_addon.version = '1.1.2'
 _addon.commands = {'xigear'}
 
 require('tables')
@@ -85,6 +85,13 @@ local function augments_and_rank(item)
         if a and a ~= 'none' and a ~= '' then augs[#augs + 1] = tostring(a) end
     end
     local rank = decoded and decoded.rank or nil
+    -- Weapons and armor with no item data at all have never been augmented or upgraded: an Odyssey, Sortie, Unity
+    -- or JSE piece like that is rank 0, which xi-gear then counts as a known R0 (not a rank the file left out).
+    local r = res.items[item.id]
+    if not rank and #augs == 0 and r and (r.category == 'Armor' or r.category == 'Weapon')
+            and type(item.extdata) == 'string' and not item.extdata:find('[^%z]') then
+        return augs, 0
+    end
     if not rank then
         local r, path = ranked_gear(item.extdata)
         if r then
