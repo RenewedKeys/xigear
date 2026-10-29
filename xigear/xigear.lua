@@ -36,7 +36,7 @@ job points spent and master levels for each job. The addon only writes this file
 
 _addon.name = 'xigear'
 _addon.author = 'xi-gear'
-_addon.version = '1.0.0'
+_addon.version = '1.1.0'
 _addon.commands = {'xigear'}
 
 require('tables')
@@ -59,7 +59,20 @@ local JOBS = {'WAR', 'MNK', 'WHM', 'BLM', 'RDM', 'THF', 'PLD', 'DRK', 'BST', 'BR
 -- Reading the game
 ------------------------------------------------------------------------------------------------------------
 
+-- Odyssey / Sortie style gear (Nyame, Sakpata, Gleti...): Windower's extdata library doesn't give these items
+-- a rank, so they used to come in with none. Their raw extdata marks them with 2 or 3 in byte 1 (augmented gear)
+-- and 131 in byte 2; the path is byte 5 (0-3 = A-D) and the rank is bits 2-6 of byte 7.
+-- Thanks to the player who kept the decoder Windower briefly shipped and then took back out.
+local PATHS = {[0] = 'A', [1] = 'B', [2] = 'C', [3] = 'D'}
+local function ranked_gear(raw)
+    if type(raw) ~= 'string' or #raw < 7 then return nil end
+    local kind = raw:byte(1)
+    if (kind ~= 2 and kind ~= 3) or raw:byte(2) ~= 131 then return nil end
+    return math.floor((raw:byte(7) % 128) / 4), PATHS[raw:byte(5) % 4]
+end
+
 -- An item's augments and rank, read the same way invdump does: Windower's own list first, else extdata.
+-- When that gives no rank, ranked_gear() reads it (and the path) straight from the item.
 local function augments_and_rank(item)
     local decoded
     if item.extdata then
@@ -71,7 +84,19 @@ local function augments_and_rank(item)
     for _, a in ipairs(src) do
         if a and a ~= 'none' and a ~= '' then augs[#augs + 1] = tostring(a) end
     end
-    return augs, decoded and decoded.rank or nil
+    local rank = decoded and decoded.rank or nil
+    if not rank then
+        local r, path = ranked_gear(item.extdata)
+        if r then
+            if r > 0 then rank = r end
+            local has_path = false
+            for _, a in ipairs(augs) do
+                if a:lower():find('^path') then has_path = true end
+            end
+            if path and not has_path then augs[#augs + 1] = 'Path: ' .. path end
+        end
+    end
+    return augs, rank
 end
 
 local function read_items()
