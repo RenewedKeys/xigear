@@ -38,6 +38,7 @@ Do it again whenever your gear changes. Each character has its own file.
 | Command | What it does |
 |---|---|
 | `//xigear export` | Save this character to a file for xi-gear |
+| `//xigear bytes` | Save the raw item data of your weapons and armor to `xigear_bytes_<name>_<date>_<time>.txt`, to help the xi-gear team fix a rank or path the export misses. Not for importing |
 | `//xigear help` | List the commands |
 
 ## Credits

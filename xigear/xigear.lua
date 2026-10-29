@@ -36,7 +36,7 @@ job points spent and master levels for each job. The addon only writes this file
 
 _addon.name = 'xigear'
 _addon.author = 'xi-gear'
-_addon.version = '1.1.0'
+_addon.version = '1.1.1'
 _addon.commands = {'xigear'}
 
 require('tables')
@@ -232,13 +232,56 @@ local function save_file()
     end
 end
 
+-- //xigear bytes: a text file with the raw item data of every weapon and armor piece that has any, plus what
+-- Windower's extdata library and this addon read from it. Only for working out a rank or path the export
+-- misses (send the file to the xi-gear team); it isn't for importing.
+local function hex(raw)
+    local t = {}
+    for i = 1, #raw do t[i] = ('%02X'):format(raw:byte(i)) end
+    return table.concat(t, ' ')
+end
+
+local function save_bytes()
+    local all = windower.ffxi.get_items()
+    local player = windower.ffxi.get_player()
+    if not all or not player then say('Your character and bags are still loading. Try again in a few seconds.', ERR) return end
+    local lines = {('xigear %s raw item data for %s, %s. Not for importing.'):format(_addon.version, player.name, os.date('%Y-%m-%d %H:%M:%S')),
+                   'bag | item id | name | 24 bytes | Windower extdata: type, system, rank, path, augments | xigear: rank, path'}
+    for _, bag in ipairs(BAGS) do
+        local b = all[bag]
+        if b then
+            for _, item in pairs(b) do
+                local r = type(item) == 'table' and item.id and item.id > 0 and res.items[item.id]
+                local raw = r and (r.category == 'Armor' or r.category == 'Weapon') and item.extdata
+                if type(raw) == 'string' and raw:find('[^%z]') then
+                    local ok, d = pcall(extdata.decode, item)
+                    local w = ok and d and ('%s, %s, %s, %s, %s'):format(tostring(d.type), tostring(d.augment_system),
+                        tostring(d.rank), tostring(d.path), table.concat(d.augments or {}, ' / ')) or ('error: ' .. tostring(d))
+                    local xr, xp = ranked_gear(raw)
+                    lines[#lines + 1] = ('%s | %d | %s | %s | %s | %s, %s'):format(bag, item.id, r.en or '', hex(raw), w, tostring(xr), tostring(xp))
+                end
+            end
+        end
+    end
+    windower.create_dir(data_dir)
+    local name = ('xigear_bytes_%s_%s.txt'):format(player.name, os.date('%Y%m%d_%H%M%S'))
+    if write(data_dir .. name, table.concat(lines, '\n') .. '\n') then
+        say(('Saved %s (%d pieces). Send it to the xi-gear team; it isn\'t for importing.'):format(name, #lines - 2))
+    else
+        say("Couldn't write the file.", ERR)
+    end
+end
+
 windower.register_event('addon command', function(cmd)
     cmd = (cmd or 'help'):lower()
     if cmd == 'export' then
         save_file()
+    elseif cmd == 'bytes' then
+        save_bytes()
     else
         say('Commands:')
         say('  //xigear export - save this character to a file for xi-gear.com > Characters > Import')
+        say('  //xigear bytes - save the raw item data of your gear, to help fix a rank the export misses')
         say('  //xigear help - this list')
     end
 end)
