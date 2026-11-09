@@ -13,6 +13,7 @@ Only this, for the character you're logged in as:
 - The items stored on your storage slips
 - Your merits
 - Each job's level, job points spent and master level
+- When your main job is Blue Mage: the blue magic spells you have set (so xi-gear can work out your set's job traits)
 
 ## Install
 
