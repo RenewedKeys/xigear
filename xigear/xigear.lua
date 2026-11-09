@@ -31,12 +31,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 What the file holds: your character's name, server and race; every item in your inventory, wardrobes
 and Mog House bags with its augments and rank; the items on your storage slips; your merits; job levels,
-job points spent and master levels for each job. The addon only writes this file. It has no network code and sends nothing.
+job points spent and master levels for each job; and, when your main job is Blue Mage, the blue magic
+spells you have set. The addon only writes this file. It has no network code and sends nothing.
 ]]
 
 _addon.name = 'xigear'
 _addon.author = 'xi-gear'
-_addon.version = '1.1.2'
+_addon.version = '1.2.0'
 _addon.commands = {'xigear'}
 
 require('tables')
@@ -151,6 +152,28 @@ local function read_master_levels()
     return out
 end
 
+-- The blue magic you have set, as spell ids (Windower resources spells.lua), when your main job is Blue Mage.
+-- get_mjob_data().spells holds one entry per slot; 512 (and 0) is an empty slot. nil when you aren't BLU or
+-- the job data isn't loaded yet, so the file then leaves the set out and xi-gear keeps the one it has saved.
+local function read_blue_spells(player)
+    if player.main_job ~= 'BLU' then return nil end
+    local data = windower.ffxi.get_mjob_data()
+    if type(data) ~= 'table' or type(data.spells) ~= 'table' then return nil end
+    local slots = {}
+    for k in pairs(data.spells) do if type(k) == 'number' then slots[#slots + 1] = k end end
+    if #slots == 0 then return nil end  -- no slots at all: not loaded yet, never read as an empty set
+    table.sort(slots)
+    local out, seen = {}, {}
+    for _, k in ipairs(slots) do
+        local id = data.spells[k]
+        if type(id) == 'number' and id ~= 512 and id ~= 0 and not seen[id] then
+            seen[id] = true
+            out[#out + 1] = id
+        end
+    end
+    return out
+end
+
 local function read_character()
     local player = windower.ffxi.get_player()
     if not player then return nil end
@@ -166,6 +189,7 @@ local function read_character()
         local lv = player.jobs and player.jobs[job]
         if lv and lv > 0 then levels[job] = lv end
     end
+    local blue = read_blue_spells(player)
     local merits = {}
     for k, v in pairs(player.merits or {}) do
         if type(v) == 'number' then merits[k] = v end
@@ -181,6 +205,7 @@ local function read_character()
         job_points = jp,
         master_levels = read_master_levels(),
         merits = merits,
+        jobs = blue and {BLU = {blue_spells = blue}} or nil,
     }
 end
 
@@ -232,6 +257,7 @@ local function save_file()
     local name = ('xigear_%s_%s.json'):format(data.character, os.date('%Y%m%d_%H%M%S'))
     if write(data_dir .. name, to_json(data)) then
         say(('Saved %s: %d items, %d on storage slips.'):format(name, #data.items, #data.slips))
+        if data.jobs then say(('Blue magic set: %d spells.'):format(#data.jobs.BLU.blue_spells)) end
         say('It\'s in Windower4/addons/xigear/data. Import it on xi-gear.com > Characters > Import.')
         if not data.master_levels then say('Master levels weren\'t loaded yet: zone once and export again to include them.') end
     else
